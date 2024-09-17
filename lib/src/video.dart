@@ -144,30 +144,32 @@ class YoYoPlayer extends StatefulWidget {
   /// ```
   ///
   final Widget title;
-  const YoYoPlayer({
-    Key? key,
-    required this.url,
-    this.aspectRatio = 16 / 9,
-    this.videoStyle = const VideoStyle(),
-    this.videoLoadingStyle = const VideoLoadingStyle(),
-    required this.title,
-    this.onFullScreen,
-    this.onPlayingVideo,
-    this.onPlayButtonTap,
-    this.onShowMenu,
-    this.onFastForward,
-    this.onRewind,
-    this.headers,
-    this.autoPlayVideoAfterInit = true,
-    this.displayFullScreenAfterInit = false,
-    this.allowCacheFile = false,
-    this.onCacheFileCompleted,
-    this.onCacheFileFailed,
-    this.onVideoInitCompleted,
-    this.closedCaptionFile,
-    this.videoPlayerOptions,
-    this.onLiveDirectTap,
-  }) : super(key: key);
+  final double? qualityOptionPadiingRight;
+  const YoYoPlayer(
+      {Key? key,
+      required this.url,
+      this.aspectRatio = 16 / 9,
+      this.videoStyle = const VideoStyle(),
+      this.videoLoadingStyle = const VideoLoadingStyle(),
+      required this.title,
+      this.onFullScreen,
+      this.onPlayingVideo,
+      this.onPlayButtonTap,
+      this.onShowMenu,
+      this.onFastForward,
+      this.onRewind,
+      this.headers,
+      this.autoPlayVideoAfterInit = true,
+      this.displayFullScreenAfterInit = false,
+      this.allowCacheFile = false,
+      this.onCacheFileCompleted,
+      this.onCacheFileFailed,
+      this.onVideoInitCompleted,
+      this.closedCaptionFile,
+      this.videoPlayerOptions,
+      this.onLiveDirectTap,
+      this.qualityOptionPadiingRight})
+      : super(key: key);
 
   @override
   State<YoYoPlayer> createState() => _YoYoPlayerState();
@@ -322,8 +324,11 @@ class _YoYoPlayerState extends State<YoYoPlayer>
     FlutterScreenWake.keepOn(true);
   }
 
+  var stop = false;
+
   @override
   void dispose() {
+    stop = true;
     controller.pause();
     m3u8Clean();
     controlBarAnimationController.dispose();
@@ -516,7 +521,8 @@ class _YoYoPlayerState extends State<YoYoPlayer>
       videoData: yoyo,
       videoStyle: widget.videoStyle,
       showPicker: m3u8Show,
-      positionRight: (renderBox?.size.width ?? 0.0) / 3,
+      positionRight: ((renderBox?.size.width ?? 0.0) / 3) +
+          (widget.qualityOptionPadiingRight ?? 0),
       positionTop: (offset?.dy ?? 0.0) + 35.0,
       onQualitySelected: (data) {
         if (data.dataQuality != m3u8Quality) {
@@ -797,12 +803,14 @@ class _YoYoPlayerState extends State<YoYoPlayer>
         await WakelockPlus.enable();
       }
 
-      setState(() {
-        videoDuration = controller.value.duration.convertDurationToString();
-        videoSeek = controller.value.position.convertDurationToString();
-        videoSeekSecond = controller.value.position.inSeconds.toDouble();
-        videoDurationSecond = controller.value.duration.inSeconds.toDouble();
-      });
+      if (stop == false) {
+        setState(() {
+          videoDuration = controller.value.duration.convertDurationToString();
+          videoSeek = controller.value.position.convertDurationToString();
+          videoSeekSecond = controller.value.position.inSeconds.toDouble();
+          videoDurationSecond = controller.value.duration.inSeconds.toDouble();
+        });
+      }
     } else {
       if (await WakelockPlus.enabled) {
         await WakelockPlus.disable();
